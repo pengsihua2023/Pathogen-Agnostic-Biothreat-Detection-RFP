@@ -12,7 +12,7 @@
 
 **Requested Period of Performance:** 12 months
 
-**Approximate Budget Request:** $385,000 (direct + indirect; see Section 6)
+**Approximate Budget Request:** $301,400 (direct + indirect; see Section 6)
 
 **Date:** [INSERT]  |  **Contact:** [INSERT EMAIL / PHONE]
 
@@ -85,10 +85,10 @@ GACRC provides the compute, storage, and container infrastructure required; no n
 | Compute, storage, and cloud burst capacity | $35,000 |
 | Publication, dissemination, travel | $12,000 |
 | **Total direct** | **$274,000** |
-| Indirect costs | $111,000 |
-| **Total requested** | **$385,000** |
+| Indirect costs (10% of direct, per Blueprint policy) | $27,400 |
+| **Total requested** | **$301,400** |
 
-*Note: indirect cost recovery will be reconciled with Blueprint's published Policy on Indirect Costs prior to full proposal submission; the figure above is a placeholder pending that reconciliation.* The project is modular by design — Aims 1 and 3 constitute a coherent standalone effort at approximately $240,000 should Blueprint prefer a tighter scope.
+Indirect costs are budgeted at Blueprint's published 10% cap; the University of Georgia's negotiated F&A rate exceeds this, and we are initiating the institutional waiver request through the Office of Research now rather than at Full Proposal stage. The project is modular by design — **Aims 1 and 3 constitute a coherent standalone effort at approximately $190,000** should Blueprint prefer a tighter scope.
 
 ## 7. Risks and Mitigations
 
