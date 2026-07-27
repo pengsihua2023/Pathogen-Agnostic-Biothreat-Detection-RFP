@@ -22,23 +22,26 @@
 
 Metagenomic sequencing removes the requirement to know what to look for at the bench. It does not remove it at the keyboard. Every widely deployed classifier in operational wastewater and pooled-human surveillance — Kraken2/Bracken, GOTTCHA2, Centrifuge — assigns reads by reference matching. A genuinely novel or substantially divergent agent, by construction, has no reference to match. It is not misclassified; it is discarded into the unclassified fraction, which in real wastewater runs routinely comprises 60–90% of reads.
 
-The field's practical response has been to accept lower stringency and generate more candidates. This creates the second, now-binding bottleneck: **analyst throughput**. A production wastewater program generating hundreds of samples per week produces far more flagged contigs than any expert team can adjudicate. Candidates are triaged by whoever has time, using ad hoc BLAST searches, with no audit trail and no calibrated confidence. Programs such as CDC Biothreat Radar, NWSS, and mSCAPE will not scale on expert attention.
+The field's practical response has been to accept lower stringency and generate more candidates. This creates the second, now-binding bottleneck: **analyst throughput**. A production wastewater program generating hundreds of samples per week produces far more flagged contigs than any expert team can adjudicate. Triage falls to whoever has time, via ad hoc BLAST, with no audit trail and no calibrated confidence. Programs such as CDC Biothreat Radar, NWSS, and mSCAPE will not scale on expert attention.
 
 NOVA-MGS addresses both failures directly: a reference-free scoring engine that assigns calibrated novelty probabilities to sequences no database contains, and a deterministic verification stage that converts a raw candidate into an auditable, decision-ready evidence package — no analyst time spent reconstructing what a flagged contig actually is.
 
 ## 2. Technical Approach
 
-### Aim 1 — Dual-channel novelty scoring, calibration, and evidence verification (Months 1–9)
+![**Figure 1. NOVA-MGS processing chain.** Contigs are scored by two orthogonal channels — nucleotide-level FracMinHash containment (Channel A) and per-ORF protein-embedding local density (Channel B) — then aggregated to contig level, fused, and isotonically calibrated to a Novelty and Concern Score. Only candidates above threshold enter deterministic evidence verification.](NOVA-MGS-4.png){width=5.2in}
+
+
+### Aim 1 — Dual-channel scoring, calibration, and evidence verification (Months 1–9)
 
 We will score sequences by **distance from** known viral space rather than **membership in** it, using two orthogonal channels whose failure modes do not overlap.
 
-*Channel A (nucleotide).* FracMinHash containment via sourmash against a curated viral sketch database, retaining the full containment distribution rather than a threshold call. Containment rather than Jaccard is the correct measure when a short contig is compared against a large database, and we use the debiased estimator and confidence intervals of Hera et al. (2023) rather than the naive binomial form, which carries a small-sketch bias. This captures agents related to known viruses but falling below classifier assignment thresholds.
+*Channel A (nucleotide).* FracMinHash containment via sourmash against a curated viral sketch database [1], retaining the full containment distribution rather than a threshold call. Containment rather than Jaccard is the correct measure when a short contig is compared against a large database [2], and we use the debiased estimator and confidence intervals of Hera et al. [3] rather than the naive binomial form, which carries a small-sketch bias. This captures agents related to known viruses but falling below classifier assignment thresholds.
 
-*Channel B (protein).* Six-frame ORF prediction on assembled contigs and high-complexity read clusters, followed by protein language model embedding (ESM-2) and local-outlier-factor density estimation against a manifold built from known viral proteomes. Because nearest-neighbour distances concentrate at an embedding dimension near 1280, density is estimated under cosine distance on L2-normalised embeddings with prior dimension reduction, not raw Euclidean volume. This channel recovers agents whose nucleotide sequence has diverged past recognition but whose capsid, polymerase, or glycoprotein folds retain viral character — precisely the regime where Channel A fails.
+*Channel B (protein).* Six-frame ORF prediction on assembled contigs and high-complexity read clusters, followed by protein language model embedding (ESM-2) [4] and local-outlier-factor density estimation [5] against a manifold built from known viral proteomes. Because nearest-neighbour distances concentrate at an embedding dimension near 1280 [6], density is estimated under cosine distance on L2-normalised embeddings with prior dimension reduction, not raw Euclidean volume. This channel recovers agents whose nucleotide sequence has diverged past recognition but whose capsid, polymerase, or glycoprotein folds retain viral character — precisely the regime where Channel A fails.
 
-Because Channel A scores contigs while Channel B scores individual ORFs, ORF-level evidence is aggregated within each contig before fusion, so that both channels enter the model as the same statistical unit. A logistic fusion combines the aligned features and their interaction into a scalar score, which an isotonic regression fitted on an independent split (Aim 2) maps to a per-contig **Novelty and Concern Score (NCS)** — an interpretable probability rather than an arbitrary index. Fusion, calibration, and reliability assessment are fitted on separate splits, or by nested cross-fitting, so reported probabilities are not optimistic; isotonic regression is benchmarked against Platt scaling and beta calibration and selected by cross-validated Brier score. Calibration, not raw discrimination, is the deliverable that makes downstream alert thresholds defensible.
+Because Channel A scores contigs while Channel B scores individual ORFs, ORF-level evidence is aggregated within each contig before fusion, so that both channels enter the model as the same statistical unit. A logistic fusion combines the aligned features and their interaction into a scalar score, which an isotonic regression fitted on an independent split (Aim 2) maps to a per-contig **Novelty and Concern Score (NCS)** — an interpretable probability rather than an arbitrary index. Fusion, calibration, and reliability assessment are fitted on separate splits, or by nested cross-fitting, so reported probabilities are not optimistic; isotonic regression is benchmarked against Platt scaling and beta calibration and selected by cross-validated Brier score [7]. Calibration, not raw discrimination, is the deliverable that makes downstream alert thresholds defensible.
 
-Implementation is Nextflow with Apptainer containers, engineered for SLURM clusters, targeting throughput of hundreds of samples and billions of reads. Preliminary profiling on our existing GACRC pipelines indicates a per-sample marginal cost consistent with routine weekly operation at metropolitan-catchment scale; hard turnaround figures will be reported as a primary deliverable.
+Implementation is Nextflow with Apptainer containers on SLURM, targeting hundreds of samples and billions of reads. Profiling on our existing GACRC pipelines indicates a per-sample marginal cost consistent with routine weekly operation at metropolitan-catchment scale; hard turnaround figures are a primary deliverable.
 
 *Evidence verification.* A calibrated score is necessary but not sufficient: an operator still has to decide what a flagged contig is. Every candidate above threshold therefore passes through a fixed verification subworkflow before it is reported — read support and coverage breadth/depth against the assembled contig, remote-homology search (DIAMOND, MMseqs2), viral hallmark gene profiling (HMMER against Pfam/VOG), structure-level homology (Foldseek against AlphaFold DB) for cases where sequence homology has been erased, cross-tool concordance (geNomad, VirSorter2), and abundance trajectory for the same sequence cluster across prior samples. These are deterministic tools composed as a Nextflow subworkflow, so the same input yields the same evidence package and every line in it is traceable to a specific tool invocation.
 
@@ -52,7 +55,7 @@ Real wastewater backgrounds from CASPER (PRJNA1247874), NWSS (PRJNA747181), Tisz
 
 Leakage control is the part of benchmark design most often skipped, so we specify it explicitly: the entire clade of each spiked genome is removed from every reference, sketch, and training set; difficulty is then indexed continuously by ANI to the nearest retained neighbour rather than by a binary novel/known label, and results are reported per difficulty stratum rather than pooled. Pooling hides the sub-80% regime where a genuinely novel agent actually sits. A parallel time-split protocol — fit and calibrate only on sequences deposited before a cutoff date, evaluate strictly after it — tests generalisation without relying on synthetic divergence at all.
 
-Because positives are a vanishing fraction of contigs, evaluation reports AUPRC rather than ROC-AUC, together with the analyst workload implied at the chosen threshold: the alert budget, not a default cutoff, sets the operating point. Probability quality is assessed separately from ranking via reliability diagrams and a Brier-score decomposition, since a well-ranked score can still be badly calibrated.
+Because positives are a vanishing fraction of contigs, evaluation reports AUPRC rather than ROC-AUC [8], together with the analyst workload implied at the chosen threshold: the alert budget, not a default cutoff, sets the operating point. Probability quality is assessed separately from ranking via reliability diagrams and a Brier-score decomposition, since a well-ranked score can still be badly calibrated.
 
 Retrospective validation will ask the operationally decisive question — *would this have caught it, and how much earlier?* — against mpox 2022 and H5N1-in-wastewater 2024 signals in archived public data.
 
@@ -64,13 +67,13 @@ All software will be released under a permissive open-source license (MIT/Apache
 
 ## 4. Responsible Disclosure
 
-One extension of Aim 1 — statistical change-point screening for engineering signatures in assembled contigs — carries a plausible information-hazard profile, in that detailed publication of screening signatures could inform evasion. We raise this proactively rather than after the fact. We propose to develop this component under a tiered disclosure agreement negotiated with Blueprint: operational capability shared with vetted surveillance programs, with method-level publication timing and detail determined jointly. We are prepared to descope this component entirely if Blueprint prefers.
+One optional extension of Aim 1 — statistical change-point screening for engineering signatures in assembled contigs — carries a plausible information hazard, since detailed publication of screening signatures could inform evasion. We raise this proactively. We propose to develop it under a tiered disclosure agreement negotiated with Blueprint: operational capability shared with vetted surveillance programs, publication timing and method-level detail determined jointly. We will descope it entirely if Blueprint prefers.
 
 ## 5. Team and Capability
 
 The PI has 40+ peer-reviewed publications (h-index 24) spanning computational biology and biostatistics, with current active work on metagenomic viral detection across Illumina, PacBio HiFi, and Nanopore platforms using nf-core/mag, sourmash, geNomad, VirSorter2, GOTTCHA2, and Kraken2/Bracken, operating at scale on the GACRC SLURM cluster via Nextflow and Apptainer. Alongside this, the PI's training and publication record in biostatistics and experimental design is what the calibration and benchmark work in Aims 1 and 2 actually rests on: the hard part of this proposal is not running the tools but establishing that the probabilities they emit mean what they claim to mean.
 
-GACRC provides the compute, storage, and container infrastructure required; no new hardware is requested. We welcome Blueprint's introduction to operational partners (CASPER, Zephyr, NWSS-participating utilities) for real-world validation, and are open to teaming with groups submitting complementary TA2 or TA3 proposals.
+GACRC provides all required compute, storage, and container infrastructure; no new hardware is requested. We welcome introductions to operational partners (CASPER, Zephyr, NWSS-participating utilities) for real-world validation, and are open to teaming with complementary TA2 or TA3 proposals.
 
 ## 6. Budget Summary (approximate, 12 months)
 
@@ -94,7 +97,20 @@ The budget is deliberately lean on non-personnel cost: GACRC provides cluster co
 
 **False-positive burden at operational thresholds.** A calibrated score does not by itself bound analyst workload. We therefore report, for every operating point, the implied candidates-per-week at realistic sample volumes, and set thresholds from that budget rather than from a default cutoff.
 
-**Benchmark realism.** In-silico spike-ins can flatter detection methods. We mitigate through leave-one-clade-out real genomes and retrospective testing against genuine historical signals, and we will state benchmark limitations explicitly rather than in a footnote.
+**Benchmark realism.** In-silico spike-ins can flatter detection methods. We mitigate with leave-one-clade-out real genomes and retrospective testing against historical signals, and state benchmark limitations in the main text.
+
+## 8. References
+
+1. Ondov BD, Treangen TJ, Melsted P, Mallonee AB, Bergman NH, Koren S, Phillippy AM. Mash: fast genome and metagenome distance estimation using MinHash. *Genome Biology* 2016;17:132.
+2. Koslicki D, Zabeti H. Improving MinHash via the containment index with applications to metagenomic analysis. *Applied Mathematics and Computation* 2019;354:206–215.
+3. Hera MR, Pierce-Ward NT, Koslicki D. Deriving confidence intervals for mutation rates across a wide range of evolutionary distances using FracMinHash. *Genome Research* 2023;33(7):1061–1068.
+4. Lin Z, Akin H, Rao R, et al. Evolutionary-scale prediction of atomic-level protein structure with a language model. *Science* 2023;379(6637):1123–1130.
+5. Breunig MM, Kriegel H-P, Ng RT, Sander J. LOF: identifying density-based local outliers. *Proceedings of ACM SIGMOD* 2000:93–104.
+6. Zimek A, Schubert E, Kriegel H-P. A survey on unsupervised outlier detection in high-dimensional numerical data. *Statistical Analysis and Data Mining* 2012;5(5):363–387.
+7. Niculescu-Mizil A, Caruana R. Predicting good probabilities with supervised learning. *Proceedings of ICML* 2005:625–632.
+8. Saito T, Rehmsmeier M. The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets. *PLoS ONE* 2015;10(3):e0118432.
+
+*Per the RFP, references do not contribute to the page limit.*
 
 ---
 
