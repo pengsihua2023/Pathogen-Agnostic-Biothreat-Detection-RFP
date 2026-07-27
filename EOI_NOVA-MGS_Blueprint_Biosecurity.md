@@ -12,7 +12,7 @@
 
 **Requested Period of Performance:** 12 months
 
-**Approximate Budget Request:** $301,400 (direct + indirect; see Section 6)
+**Approximate Budget Request:** $249,700 (direct + indirect; see Section 6)
 
 **Date:** [INSERT]  |  **Contact:** [INSERT EMAIL / PHONE]
 
@@ -78,17 +78,17 @@ GACRC provides the compute, storage, and container infrastructure required; no n
 
 | Category | Amount |
 |---|---|
-| PI effort (40% FTE) | $62,000 |
+| PI effort (30% FTE) | $47,000 |
 | Postdoctoral researcher (100% FTE) | $78,000 |
 | Graduate research assistant (50% FTE, incl. tuition) | $46,000 |
-| Fringe benefits | $41,000 |
-| Compute, storage, and cloud burst capacity | $35,000 |
-| Publication, dissemination, travel | $12,000 |
-| **Total direct** | **$274,000** |
-| Indirect costs (10% of direct, per Blueprint policy) | $27,400 |
-| **Total requested** | **$301,400** |
+| Fringe benefits | $37,000 |
+| GPU cloud burst capacity and archival storage | $10,000 |
+| Publication, dissemination, travel | $9,000 |
+| **Total direct** | **$227,000** |
+| Indirect costs (10% of direct, per Blueprint policy) | $22,700 |
+| **Total requested** | **$249,700** |
 
-Indirect costs are budgeted at Blueprint's published 10% cap; the University of Georgia's negotiated F&A rate exceeds this, and we are initiating the institutional waiver request through the Office of Research now rather than at Full Proposal stage. The project is modular by design — **Aims 1 and 3 constitute a coherent standalone effort at approximately $190,000** should Blueprint prefer a tighter scope.
+The budget is deliberately lean on non-personnel cost: GACRC provides cluster compute, storage, and container infrastructure to the PI at no charge to the project, so the compute line covers only GPU cloud burst for protein language model embedding and persistent archival hosting of the benchmark release. No new hardware is requested. Indirect costs are budgeted at Blueprint's published 10% cap; the University of Georgia's negotiated F&A rate exceeds this, and we are initiating the institutional waiver request through the Office of Research now rather than at Full Proposal stage. The project is modular by design — **Aims 1 and 3 constitute a coherent standalone effort at approximately $155,000** should Blueprint prefer a tighter scope.
 
 ## 7. Risks and Mitigations
 
