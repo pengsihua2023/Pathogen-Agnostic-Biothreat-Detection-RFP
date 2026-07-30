@@ -11,3 +11,12 @@
  - billions of read pairs per day：每天数十亿对双端测序读段
  - hundreds of samples：数百个样本
  - rapid turnaround time：快速的分析周转时间
+
+## 三个方向
+● Computational detection of known and novel pathogens, including zoonotic and engineered, in MGS data
+● Sample processing methods for more sensitive, sequencing-based detection and rapid validation of sequences of concern
+● Modeling pathogen-agnostic biosurveillance system features such as cost, sensitivity, and optimal deployment
+
+● 基于宏基因组测序（MGS）数据，对已知及新型病原体（包括人兽共患病原体和经人工改造的病原体）进行计算检测 （NOVA，SIEVE）
+● 针对基于测序的检测，开发可提高灵敏度的样本处理方法，并实现对关注序列的快速验证
+● 对不针对特定病原体的生物监测系统进行建模，评估其成本、灵敏度及最佳部署方案等特性 （DPD）
