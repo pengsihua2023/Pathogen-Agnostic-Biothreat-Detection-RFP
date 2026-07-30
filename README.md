@@ -1,1 +1,13 @@
 # Pathogen-Agnostic-Biothreat-Detection-RFP
+
+- 对于计算方法和样本处理方法的开发，我们重点考虑的因素包括：快速的周转时间（从样本采集到获得生物信息学分析结果）、扩展至处理数百个样本和数十亿条测序读段的能力，以及对环境样本或人群混合样本的适用性，例如污水、空气、鼻拭子、唾液和血液样本。
+“For computational and sample processing methods development, some of our key considerations include rapid turnaround time (sample collection to bioinformatic results), ability to scale to hundreds of samples and billions of reads, and applicability to environmental or pooled-human samples such as wastewater, air, nasal swabs, saliva, and blood.”
+- 我们预计，有竞争力的计算方法类项目应开发开放、易于获取、设计良好、文档完善且用户友好的工具。这些工具应强调处理速度和并行计算能力，并且能够部署在每天处理数十亿对测序读段的检测流程中。
+  “We anticipate that competitive computational proposals will develop open, accessible, well-designed, documented, and user-friendly tools that emphasize speed and parallelizability, and are deployable in detection pipelines processing billions of read pairs per day.”
+
+- processing billions of read pairs per day
+每天处理数十亿个双端测序 read pairs。
+ - billions of reads：数十亿条测序读段
+ - billions of read pairs per day：每天数十亿对双端测序读段
+ - hundreds of samples：数百个样本
+ - rapid turnaround time：快速的分析周转时间
